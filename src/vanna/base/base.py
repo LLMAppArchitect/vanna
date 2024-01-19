@@ -169,6 +169,76 @@ class VannaBase(ABC):
         pass
 
     # ----------------- Connect to Any Database to run the Generated SQL ----------------- #
+    import os
+    import pymysql
+    from typing import Union
+
+    def connect_to_mysql(
+            host: str,
+            user: str,
+            password: str,
+            database: str,
+            port: Union[int, None] = None,
+    ):
+        try:
+            pymysql = __import__("pymysql")
+        except ImportError:
+            raise DependencyError(
+                "You need to install required dependencies to execute this method, run command:"
+                " \npip install pymysql"
+            )
+
+        if user == "my-username":
+            user_env = os.getenv("MYSQL_USERNAME")
+
+            if user_env is not None:
+                user = user_env
+            else:
+                raise ImproperlyConfigured("Please set your MySQL username.")
+
+        if password == "my-password":
+            password_env = os.getenv("MYSQL_PASSWORD")
+
+            if password_env is not None:
+                password = password_env
+            else:
+                raise ImproperlyConfigured("Please set your MySQL password.")
+
+        if host == "my-host":
+            host_env = os.getenv("MYSQL_HOST")
+
+            if host_env is not None:
+                host = host_env
+            else:
+                raise ImproperlyConfigured("Please set your MySQL host.")
+
+        if database == "my-database":
+            database_env = os.getenv("MYSQL_DATABASE")
+
+            if database_env is not None:
+                database = database_env
+            else:
+                raise ImproperlyConfigured("Please set your MySQL database.")
+
+        if port is None:
+            port = 3306
+
+        conn = pymysql.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database,
+            port=port,
+        )
+
+        def run_sql_mysql(sql: str):
+            cursor = conn.cursor()
+            cursor.execute(sql)
+            results = cursor.fetchall()
+
+            return results
+
+        return run_sql_mysql
 
     def connect_to_snowflake(
         self,
